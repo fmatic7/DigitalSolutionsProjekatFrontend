@@ -1,0 +1,29 @@
+﻿@page "/details/{Id:guid}"
+@inject HttpClient Http
+@using DS_projekat.Models
+
+<h2>Detalji posiljke</h2>
+
+@if (Shipment != null)
+{
+    <div>
+        <p><strong>Naziv:</strong> @Shipment.Naziv</p>
+        <p><strong>Status:</strong> @Shipment.Status</p>
+        <p><strong>Datum kreiranja:</strong> @Shipment.DatumKreiranja?.ToString("dd.MM.yyyy")</p>
+        <p><strong>Datum isporuke:</strong> @Shipment.DatumIsporuke?.ToString("dd.MM.yyyy")</p>
+    </div>
+}
+else
+{
+    <p>Posiljka nije pronadjena.</p>
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+    private Posiljka? Shipment { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Shipment = await Http.GetFromJsonAsync<Posiljka>($"/api/posiljke/{Id}");
+    }
+}

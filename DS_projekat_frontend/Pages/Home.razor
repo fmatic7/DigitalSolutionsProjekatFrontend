@@ -1,0 +1,83 @@
+﻿@page "/"
+@inject HttpClient Http
+@using System.Net.Http.Json
+@using DS_projekat.Models
+
+<PageTitle>Pocetna</PageTitle>
+
+<h1>Posiljke</h1>
+
+<input @bind="Filter" placeholder="Pretraga po nazivu/statusu..." />
+<button @onclick="LoadShipments">Pretrazi</button>
+
+<table>
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Naziv</th>
+            <th>Status</th>
+            <th>Datum kreiranja</th>
+            <th>Datum isporuke</th>
+            <th>Akcije</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Shipments != null && Shipments.Any())
+        {
+            @foreach (var shipment in Shipments)
+            {
+                <tr>
+                    <td>@shipment.Id</td>
+                    <td>@shipment.Naziv</td>
+                    <td>@shipment.Status</td>
+                    <td>@shipment.DatumKreiranja?.ToString("dd.MM.yyyy")</td>
+                    <td>@shipment.DatumIsporuke?.ToString("dd.MM.yyyy")</td>
+                    <td>
+                        <button @onclick="() => NavigateToDetails(shipment.Id)">Detalji</button>
+                        <button @onclick="() => EditShipment(shipment.Id)">Izmena</button>
+                        <button @onclick="() => DeleteShipment(shipment.Id)" disabled="@(!IsLoggedIn)">Brisanje</button>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="6">Nema posiljki za prikaz.</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<Posiljka> Shipments { get; set; } = new();
+    private string Filter { get; set; } = "";
+    private bool IsLoggedIn { get; set; } = true; // Simulacija autorizacije
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadShipments();
+    }
+
+    private async Task LoadShipments()
+    {
+        var url = $"/api/posiljke?filter={Filter}";
+        Shipments = await Http.GetFromJsonAsync<List<Posiljka>>(url) ?? new();
+    }
+
+    private void NavigateToDetails(Guid id)
+    {
+        NavigationManager.NavigateTo($"/details/{id}");
+    }
+
+    private void EditShipment(Guid id)
+    {
+        NavigationManager.NavigateTo($"/edit/{id}");
+    }
+
+    private async Task DeleteShipment(Guid id)
+    {
+        await Http.DeleteAsync($"/api/posiljke/{id}");
+        await LoadShipments();
+    }
+}

@@ -1,0 +1,51 @@
+﻿@page "/edit/{Id:guid?}"
+@inject HttpClient Http
+@using DS_projekat.Models
+
+<h2>@(IsNew ? "Dodavanje posiljke" : "Izmena posiljke")</h2>
+
+<EditForm Model="@Shipment" OnValidSubmit="SaveShipment">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div>
+        <label>Naziv:</label>
+        <InputText @bind-Value="Shipment.Naziv" />
+    </div>
+    <div>
+        <label>Status:</label>
+        <InputText @bind-Value="Shipment.Status" />
+    </div>
+    <div>
+        <label>Datum isporuke:</label>
+        <InputDate @bind-Value="Shipment.DatumIsporuke" />
+    </div>
+
+    <button type="submit">Sacuvaj</button>
+</EditForm>
+
+@code {
+    [Parameter] public Guid? Id { get; set; }
+    private Posiljka Shipment { get; set; } = new();
+    private bool IsNew => Id == null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!IsNew)
+        {
+            Shipment = await Http.GetFromJsonAsync<Posiljka>($"/api/posiljke/{Id}") ?? new Posiljka();
+        }
+    }
+
+    private async Task SaveShipment()
+    {
+        if (IsNew)
+        {
+            await Http.PostAsJsonAsync("/api/posiljke", Shipment);
+        }
+        else
+        {
+            await Http.PutAsJsonAsync($"/api/posiljke/{Id}", Shipment);
+        }
+    }
+}
